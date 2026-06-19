@@ -1,0 +1,72 @@
+# codemagic.yaml — CI/CD for OneMET (commit at repo root)
+#
+# Pipeline: generate project (XcodeGen) → sign → build IPA → upload to TestFlight.
+# Runs on Codemagic's free individual tier (500 macOS M2 minutes/month).
+#
+# ─────────────────────────── ONE-TIME SETUP ───────────────────────────
+# 1. App Store Connect API key:
+#      ASC → Users and Access → Integrations → App Store Connect API →
+#      create a key (Admin/App Manager), download the .p8, note Issuer ID + Key ID.
+#      In Codemagic → Teams/Personal settings → Integrations → App Store Connect →
+#      add the key and give it a NAME. Put that name below in `integrations`.
+# 2. Developer portal: create the App ID for the bundle id below and tick the
+#      HealthKit capability on it.
+# 3. App Store Connect: create the app record (same bundle id) so TestFlight has
+#      somewhere to receive the build.
+# 4. Replace every `com.yourname.onemet`, `OneMET_ASC_API_key`, and the email.
+# ───────────────────────────────────────────────────────────────────────
+
+workflows:
+  ios-testflight:
+    name: OneMET • Build & TestFlight
+    instance_type: mac_mini_m2          # free-tier Apple-silicon instance
+    max_build_duration: 60
+
+    integrations:
+      app_store_connect: OneMET_ASC_API_key   # ← name you gave the key in Codemagic
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.yourname.onemet # ← must match project.yml + ASC
+      vars:
+        XCODE_PROJECT: "OneMET.xcodeproj"
+        XCODE_SCHEME: "OneMET"
+      xcode: latest
+
+    scripts:
+      - name: Generate Xcode project from project.yml
+        script: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Apply signing profiles to the project
+        script: xcode-project use-profiles
+      - name: Set the build number
+        script: |
+          # Codemagic's per-build counter keeps TestFlight build numbers increasing.
+          agvtool new-version -all "$BUILD_NUMBER"
+      - name: Build the signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      email:
+        recipients:
+          - your@email.com               # ← build success/failure notifications
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # beta_groups:                    # auto-distribute to a TestFlight group
+        #   - "Internal testers"
+        # submit_to_app_store: false      # flip to true (and add release notes in
+                                          # ASC) when you're ready to push to review
