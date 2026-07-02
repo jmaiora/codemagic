@@ -23,7 +23,7 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: Z9UTH2J8JC   # ← name you gave the key in Codemagic
+      app_store_connect: Api_onemet   # ← name you gave the key in Codemagic
 
     environment:
       ios_signing:
