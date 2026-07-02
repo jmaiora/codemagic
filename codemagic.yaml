@@ -23,12 +23,12 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: OneMET_ASC_API_key   # ← name you gave the key in Codemagic
+      app_store_connect: Z9UTH2J8JC   # ← name you gave the key in Codemagic
 
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.yourname.onemet # ← must match project.yml + ASC
+        bundle_identifier: com.josu.onemet # ← must match project.yml + ASC
       vars:
         XCODE_PROJECT: "OneMET.xcodeproj"
         XCODE_SCHEME: "OneMET"
@@ -59,7 +59,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your@email.com               # ← build success/failure notifications
+          - jmaiora@gmail.com               # ← build success/failure notifications
         notify:
           success: true
           failure: true
