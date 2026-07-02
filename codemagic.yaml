@@ -28,7 +28,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.josu.onemet # ← must match project.yml + ASC
+        bundle_identifier: com.jmaiora.onemet # ← must match project.yml + ASC
       vars:
         XCODE_PROJECT: "OneMET.xcodeproj"
         XCODE_SCHEME: "OneMET"
